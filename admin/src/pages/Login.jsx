@@ -9,7 +9,10 @@ import {
   Ticket,
   UserRound,
   Phone,
+  Users,
+  GraduationCap,
 } from "lucide-react";
+
 import API from "../services/api";
 import "./Login.css";
 
@@ -25,6 +28,12 @@ function Login({ onLogin }) {
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+
+  const roles = [
+    { id: "admin", label: "Admin", icon: ShieldCheck },
+    { id: "staff", label: "Staff", icon: Users },
+    { id: "student", label: "Student", icon: GraduationCap },
+  ];
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -92,18 +101,21 @@ function Login({ onLogin }) {
       <div className="login-decoration decoration-two" />
 
       <div className="login-card">
+
+        {/* Brand */}
         <div className="login-brand">
           <div className="login-logo">
-            <Ticket size={28} />
+            <Ticket size={29} strokeWidth={2.2} />
           </div>
 
           <h1>CampusQueue</h1>
-          <p>SMART CAMPUS MANAGEMENT</p>
+          <p>SMART CAMPUS MANAGEMENT SYSTEM</p>
         </div>
 
+        {/* Welcome */}
         <div className="login-heading">
           <div className="security-icon">
-            <ShieldCheck size={25} />
+            <ShieldCheck size={27} />
           </div>
 
           <h2>
@@ -113,29 +125,48 @@ function Login({ onLogin }) {
           <p>
             {isRegister
               ? "Register to access campus queue services."
-              : "Sign in to access your CampusQueue account."}
+              : "Sign in to access your campus account."}
           </p>
         </div>
 
-        <div className="role-selection">
-          {["admin", "staff", "student"].map((item) => (
-            <button
-              key={item}
-              type="button"
-              className={role === item ? "role-option active" : "role-option"}
-              onClick={() => changeRole(item)}
-            >
-              {item.charAt(0).toUpperCase() + item.slice(1)}
-            </button>
-          ))}
+        {/* Role Selection */}
+        <div className="role-section">
+          <label className="role-label">
+            Select your account type
+          </label>
+
+          <div className="role-selection">
+            {roles.map((item) => {
+              const Icon = item.icon;
+
+              return (
+                <button
+                  key={item.id}
+                  type="button"
+                  className={`role-option ${
+                    role === item.id ? "active" : ""
+                  }`}
+                  onClick={() => changeRole(item.id)}
+                  aria-pressed={role === item.id}
+                >
+                  <Icon size={23} strokeWidth={2} />
+                  <span>{item.label}</span>
+                </button>
+              );
+            })}
+          </div>
         </div>
 
+        {/* Login Form */}
         <form onSubmit={handleSubmit}>
+
           {isRegister && (
             <>
               <label htmlFor="student-name">Full Name</label>
+
               <div className="login-input">
-                <UserRound size={18} />
+                <UserRound size={19} />
+
                 <input
                   id="student-name"
                   type="text"
@@ -147,8 +178,10 @@ function Login({ onLogin }) {
               </div>
 
               <label htmlFor="student-phone">Phone Number</label>
+
               <div className="login-input">
-                <Phone size={18} />
+                <Phone size={19} />
+
                 <input
                   id="student-phone"
                   type="tel"
@@ -161,27 +194,35 @@ function Login({ onLogin }) {
           )}
 
           <label htmlFor="login-email">Email Address</label>
+
           <div className="login-input">
-            <Mail size={18} />
+            <Mail size={19} />
+
             <input
               id="login-email"
               type="email"
               placeholder="Enter your email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
+              autoComplete="username"
               required
             />
           </div>
 
           <label htmlFor="login-password">Password</label>
+
           <div className="login-input">
-            <Lock size={18} />
+            <Lock size={19} />
+
             <input
               id="login-password"
               type={showPassword ? "text" : "password"}
               placeholder="Enter your password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
+              autoComplete={
+                isRegister ? "new-password" : "current-password"
+              }
               minLength={6}
               required
             />
@@ -192,11 +233,19 @@ function Login({ onLogin }) {
               onClick={() => setShowPassword(!showPassword)}
               aria-label="Toggle password visibility"
             >
-              {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+              {showPassword ? (
+                <EyeOff size={19} />
+              ) : (
+                <Eye size={19} />
+              )}
             </button>
           </div>
 
-          {error && <div className="login-error">{error}</div>}
+          {error && (
+            <div className="login-error">
+              {error}
+            </div>
+          )}
 
           <button
             type="submit"
@@ -211,6 +260,7 @@ function Login({ onLogin }) {
           </button>
         </form>
 
+        {/* Student Registration */}
         {role === "student" && (
           <div className="registration-option">
             {isRegister
@@ -229,9 +279,10 @@ function Login({ onLogin }) {
           </div>
         )}
 
+        {/* Footer */}
         <div className="login-footer">
-          <ShieldCheck size={16} />
-          Secure CampusQueue Access
+          <ShieldCheck size={17} />
+          <span>Secure CampusQueue Access</span>
         </div>
       </div>
 
