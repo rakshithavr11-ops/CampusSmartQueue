@@ -1496,6 +1496,70 @@ if (admin.role === "student") {
                 </div>
                           )}
             </section>
+    {/* STAFF RECORDS */}
+    <div style={{ marginTop: "30px" }}>
+      <div className="page-header">
+        <div>
+          <h2>Staff Records</h2>
+          <p>View all registered campus staff members.</p>
+        </div>
+        <span>
+          Total Staff: {staffMembers.length}
+        </span>
+      </div>
+
+      {staffMembers.length === 0 ? (
+        <p>No staff records found.</p>
+      ) : (
+        <div className="table-container">
+          <table>
+            <thead>
+              <tr>
+                <th>Staff Name</th>
+                <th>Email Address</th>
+                <th>Phone Number</th>
+                <th>Assigned Counter</th>
+                <th>Account Status</th>
+                <th>Registration Date</th>
+              </tr>
+            </thead>
+
+            <tbody>
+              {staffMembers.map((staff) => {
+                const assignedCounters = counters
+                  .filter(
+                    (counter) =>
+                      counter.staff?._id === staff._id
+                  )
+                  .map((counter) => counter.name);
+
+                return (
+                  <tr key={staff._id}>
+                    <td>{staff.name}</td>
+                    <td>{staff.email}</td>
+                    <td>{staff.phone || "Not provided"}</td>
+                    <td>
+                      {assignedCounters.length > 0
+                        ? assignedCounters.join(", ")
+                        : "Not assigned"}
+                    </td>
+                    <td>
+                      {staff.isActive ? "Active" : "Inactive"}
+                    </td>
+                    <td>
+                      {staff.createdAt
+                        ? new Date(staff.createdAt).toLocaleDateString()
+                        : "Not available"}
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
+      )}
+    </div>
+
           </div>
         ) : activePage === "Services" ? (
           <div className="dashboard-content">
@@ -2040,69 +2104,6 @@ if (admin.role === "student") {
       </div>
     )}
 
-    {/* STAFF RECORDS */}
-    <div style={{ marginTop: "30px" }}>
-      <div className="page-header">
-        <div>
-          <h2>Staff Records</h2>
-          <p>View all registered campus staff members.</p>
-        </div>
-        <span>
-          Total Staff: {staffMembers.length}
-        </span>
-      </div>
-
-      {staffMembers.length === 0 ? (
-        <p>No staff records found.</p>
-      ) : (
-        <div className="table-container">
-          <table>
-            <thead>
-              <tr>
-                <th>Staff Name</th>
-                <th>Email Address</th>
-                <th>Phone Number</th>
-                <th>Assigned Counter</th>
-                <th>Account Status</th>
-                <th>Registration Date</th>
-              </tr>
-            </thead>
-
-            <tbody>
-              {staffMembers.map((staff) => {
-                const assignedCounters = counters
-                  .filter(
-                    (counter) =>
-                      counter.staff?._id === staff._id
-                  )
-                  .map((counter) => counter.name);
-
-                return (
-                  <tr key={staff._id}>
-                    <td>{staff.name}</td>
-                    <td>{staff.email}</td>
-                    <td>{staff.phone || "Not provided"}</td>
-                    <td>
-                      {assignedCounters.length > 0
-                        ? assignedCounters.join(", ")
-                        : "Not assigned"}
-                    </td>
-                    <td>
-                      {staff.isActive ? "Active" : "Inactive"}
-                    </td>
-                    <td>
-                      {staff.createdAt
-                        ? new Date(staff.createdAt).toLocaleDateString()
-                        : "Not available"}
-                    </td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
-        </div>
-      )}
-    </div>
   </div>
 ) : activePage === "Analytics" ? (
 
