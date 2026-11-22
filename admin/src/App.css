@@ -912,3 +912,122 @@ td {
     grid-template-columns: 1fr;
   }
 }
+/* COUNTERS & STAFF ACTION BUTTONS */
+
+.staff-action-button {
+  padding: 11px 20px;
+  background: #7357e8;
+  color: #ffffff;
+  border: none;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  transition: all 0.2s ease;
+}
+
+.staff-action-button:hover {
+  background: #5e43ce;
+  transform: translateY(-1px);
+}
+
+.staff-action-button:focus-visible {
+  outline: 3px solid #c4b5fd;
+  outline-offset: 2px;
+}
+.staff-submit-button {
+  padding: 11px 20px;
+  background: #7357e8;
+  color: #ffffff;
+  border: none;
+  border-radius: 8px;
+  font-weight: 600;
+}
+
+.staff-submit-button:hover {
+  background: #5e43ce;
+}
+
+.staff-submit-button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.staff-cancel-button {
+  padding: 11px 20px;
+  background: #f1f5f9;
+  color: #334155;
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+  font-weight: 600;
+}
+
+.staff-cancel-button:hover {
+  background: #e2e8f0;
+}
+/* Add spacing below the Counters & Staff heading */
+.staff-action-button {
+  margin-top: 12px;
+}
+/* Staff assignment dropdown */
+.staff-assign-select {
+  min-width: 170px;
+  padding: 9px 12px;
+  border: 1px solid #D8D1F5;
+  border-radius: 8px;
+  background: #FFFFFF;
+  color: #25243A;
+  font-size: 13px;
+  outline: none;
+  cursor: pointer;
+}
+
+.staff-assign-select:focus {
+  border-color: #7252E8;
+  box-shadow: 0 0 0 3px rgba(114, 82, 232, 0.12);
+}
+
+/* Assign button */
+.staff-assign-button {
+  padding: 9px 18px;
+  border: none;
+  border-radius: 8px;
+  background: #7252E8;
+  color: #FFFFFF;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s ease;
+}
+
+.staff-assign-button:hover:not(:disabled) {
+  background: #5D3FD0;
+}
+
+.staff-assign-button:disabled {
+  background: #C8C0E8;
+  cursor: not-allowed;
+}
+/* Counters & Staff page layout */
+.counters-staff-page {
+  padding: 26px 28px;
+  box-sizing: border-box;
+}
+
+.counters-staff-page .page-header {
+  margin-bottom: 22px;
+  gap: 18px;
+  align-items: flex-start;
+}
+
+.counters-staff-page .page-header h2 {
+  margin: 0 0 8px;
+  font-size: 24px;
+  font-weight: 700;
+  color: #25243A;
+}
+
+.counters-staff-page .page-header p {
+  margin: 0;
+  font-size: 14px;
+  color: #66647A;
+}

@@ -46,16 +46,7 @@ const navigation = [
   { name: "Analytics", icon: BarChart3 },
 ];
 
-const chartData = [
-  { time: "9 AM", students: 12 },
-  { time: "10 AM", students: 25 },
-  { time: "11 AM", students: 18 },
-  { time: "12 PM", students: 38 },
-  { time: "1 PM", students: 28 },
-  { time: "2 PM", students: 48 },
-  { time: "3 PM", students: 35 },
-  { time: "4 PM", students: 55 },
-];
+
 
 const queueData = [
   {
@@ -113,7 +104,7 @@ function App() {
     return null;
   }
 });
- 
+
 
   const [activePage, setActivePage] = useState("Dashboard");
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -126,6 +117,7 @@ const [analyticsData, setAnalyticsData] = useState(null);
 const [analyticsLoading, setAnalyticsLoading] = useState(false);
 const [analyticsError, setAnalyticsError] = useState("");
 const [analyticsRefresh, setAnalyticsRefresh] = useState(0);
+const chartData = analyticsData?.hourlyActivity || [];
 
   // Queue Management data
   const [queueTokens, setQueueTokens] = useState([]);
@@ -156,6 +148,17 @@ const [analyticsRefresh, setAnalyticsRefresh] = useState(0);
   const [selectedStaff, setSelectedStaff] = useState("");
   const [counterSaving, setCounterSaving] = useState(false);
   const [counterMessage, setCounterMessage] = useState("");
+  // Assign staff to existing counters
+const [selectedStaffByCounter, setSelectedStaffByCounter] = useState({});
+const [assigningCounterId, setAssigningCounterId] = useState("");
+// Create Staff form
+const [showStaffForm, setShowStaffForm] = useState(false);
+const [staffName, setStaffName] = useState("");
+const [staffEmail, setStaffEmail] = useState("");
+const [staffPassword, setStaffPassword] = useState("");
+const [staffPhone, setStaffPhone] = useState("");
+const [staffSaving, setStaffSaving] = useState(false);
+const [staffMessage, setStaffMessage] = useState("");
 
     // Services Management data
   const [services, setServices] = useState([]);
@@ -263,42 +266,53 @@ const [analyticsRefresh, setAnalyticsRefresh] = useState(0);
   }, [admin, activePage, servicesRefresh]);
 
   // Fetch Counters and Staff from backend
-  useEffect(() => {
-  if (!admin || admin.role !== "admin" || activePage !== "Counters & Staff") {
-      return;
-    }
+  // Fetch Counters and Staff from backend
+useEffect(() => {
+  if (
+    !admin ||
+    admin.role !== "admin" ||
+    (activePage !== "Counters & Staff" && activePage !== "Dashboard")
+  ) {
+    return;
+  }
 
-    const fetchCountersAndStaff = async () => {
-      try {
-        setCountersLoading(true);
-        setCountersError("");
+  const fetchCountersAndStaff = async () => {
+    try {
+      setCountersLoading(true);
+      setCountersError("");
 
-        const [counterResponse, staffResponse, serviceResponse] =
-          await Promise.all([
-            API.get("/counters"),
-            API.get("/auth/staff"),
-            API.get("/services"),
-          ]);
-
-        setCounters(counterResponse.data.counters || []);
-        setStaffMembers(staffResponse.data.staff || []);
-        setServices(serviceResponse.data.services || []);
-      } catch (error) {
-        console.error("Counters and Staff fetching error:", error);
-
-        setCountersError(
-          error.response?.data?.message ||
-            "Unable to load counters and staff."
-        );
-      } finally {
-        setCountersLoading(false);
+      // Dashboard only needs counter information
+      if (activePage === "Dashboard") {
+        const response = await API.get("/counters");
+        setCounters(response.data.counters || []);
+        return;
       }
-    };
 
-    fetchCountersAndStaff();
-  }, [admin, activePage, countersRefresh]);
+      // Counters & Staff page needs all three records
+      const [counterResponse, staffResponse, serviceResponse] =
+        await Promise.all([
+          API.get("/counters"),
+          API.get("/auth/staff"),
+          API.get("/services"),
+        ]);
 
+      setCounters(counterResponse.data.counters || []);
+      setStaffMembers(staffResponse.data.staff || []);
+      setServices(serviceResponse.data.services || []);
+    } catch (error) {
+      console.error("Counters and Staff fetching error:", error);
 
+      setCountersError(
+        error.response?.data?.message ||
+          "Unable to load counters and staff."
+      );
+    } finally {
+      setCountersLoading(false);
+    }
+  };
+
+  fetchCountersAndStaff();
+}, [admin, activePage, countersRefresh]);
   // Fetch real dashboard statistics
   useEffect(() => {
     if (!admin || admin.role !== "admin") {
@@ -324,9 +338,13 @@ const [analyticsRefresh, setAnalyticsRefresh] = useState(0);
   }, [admin]);
   // Fetch Analytics data from backend
   useEffect(() => {
-    if (!admin || admin.role !== "admin" || activePage !== "Analytics") {
-      return;
-    }
+    if (
+  !admin ||
+  admin.role !== "admin" ||
+  (activePage !== "Analytics" && activePage !== "Dashboard")
+) {
+  return;
+}
 
     const fetchAnalytics = async () => {
       try {
@@ -449,6 +467,85 @@ const handleLogout = () => {
       setCounterSaving(false);
     }
   };
+  // Assign staff to an existing counter
+const handleAssignStaff = async (counterId) => {
+  const staffId = selectedStaffByCounter[counterId];
+
+  if (!staffId) {
+    setCounterMessage("Please select a staff member first.");
+    return;
+  }
+
+  try {
+    setAssigningCounterId(counterId);
+    setCounterMessage("");
+
+    const response = await API.put(
+      `/counters/${counterId}/assign-staff`,
+      { staffId }
+    );
+
+    setCounterMessage(
+      response.data.message || "Staff assigned successfully!"
+    );
+
+    setCountersRefresh((previous) => previous + 1);
+  } catch (error) {
+    console.error("Assign staff error:", error);
+
+    setCounterMessage(
+      error.response?.data?.message || "Unable to assign staff."
+    );
+  } finally {
+    setAssigningCounterId("");
+  }
+};
+// Create a new staff account
+const handleCreateStaff = async (event) => {
+  event.preventDefault();
+
+  if (!staffName.trim() || !staffEmail.trim() || !staffPassword) {
+    setStaffMessage("Please fill in all required fields.");
+    return;
+  }
+
+  if (staffPassword.length < 6) {
+    setStaffMessage("Password must contain at least 6 characters.");
+    return;
+  }
+
+  try {
+    setStaffSaving(true);
+    setStaffMessage("");
+
+    const response = await API.post("/auth/create-staff", {
+      name: staffName.trim(),
+      email: staffEmail.trim(),
+      password: staffPassword,
+      phone: staffPhone.trim(),
+    });
+
+    setStaffMessage(
+      response.data.message || "Staff account created successfully!"
+    );
+
+    setStaffName("");
+    setStaffEmail("");
+    setStaffPassword("");
+    setStaffPhone("");
+    setShowStaffForm(false);
+
+    setCountersRefresh((previous) => previous + 1);
+  } catch (error) {
+    console.error("Create staff error:", error);
+
+    setStaffMessage(
+      error.response?.data?.message || "Unable to create staff account."
+    );
+  } finally {
+    setStaffSaving(false);
+  }
+};
 
   // Filter and search queue records
   const filteredQueueTokens = queueTokens.filter((token) => {
@@ -716,7 +813,11 @@ if (admin.role === "student") {
 
               <button className="date-button">
                 <CalendarDays size={17} />
-                November 21, 2026
+               {new Date().toLocaleDateString("en-IN", {
+                   day: "numeric",
+                    month: "long",
+                   year: "numeric",
+              })}
                 <ChevronDown size={16} />
               </button>
             </section>
@@ -762,14 +863,21 @@ if (admin.role === "student") {
                 </div>
 
                 <div className="chart-summary">
-                  <h2>
-                    259 <span>students</span>
-                  </h2>
+  <h2>
+    {analyticsLoading
+      ? "..."
+      : analyticsData
+        ? analyticsData.todayCompleted
+        : "—"}
+    <span> students</span>
+  </h2>
 
-                  <span className="positive-change">
-                    <ArrowUpRight size={16} /> 12.8%
-                  </span>
-                </div>
+  <span className="positive-change">
+    {analyticsData?.percentageChange == null
+      ? "No comparison"
+      : `${analyticsData.percentageChange > 0 ? "+" : ""}${analyticsData.percentageChange}% vs yesterday`}
+  </span>
+</div>
 
                 <div className="chart-container">
                   <ResponsiveContainer width="100%" height="100%">
@@ -890,25 +998,37 @@ if (admin.role === "student") {
                   </div>
                 </div>
 
-                <div className="counter-list">
-                  <div className="counter-row">
-                    <span className="counter-status-dot active-dot" />
-                    <span>Examination Section</span>
-                    <strong>Active</strong>
-                  </div>
+<div className="counter-list">
+  {countersLoading ? (
+    <p>Loading counters...</p>
+  ) : countersError ? (
+    <p>{countersError}</p>
+  ) : counters.length > 0 ? (
+    counters.slice(0, 4).map((counter) => {
+      const isActive =
+        counter.status?.toLowerCase() === "active";
 
-                  <div className="counter-row">
-                    <span className="counter-status-dot active-dot" />
-                    <span>Accounts Section</span>
-                    <strong>Active</strong>
-                  </div>
+      return (
+        <div className="counter-row" key={counter._id}>
+          <span
+            className={`counter-status-dot ${
+              isActive ? "active-dot" : "paused-dot"
+            }`}
+          />
 
-                  <div className="counter-row">
-                    <span className="counter-status-dot paused-dot" />
-                    <span>Library Counter</span>
-                    <strong>Paused</strong>
-                  </div>
-                </div>
+          <span>{counter.name || "Unnamed Counter"}</span>
+
+          <strong>{isActive ? "Active" : "Inactive"}</strong>
+        </div>
+      );
+    })
+  ) : (
+    <p>No counters available.</p>
+  )}
+</div>
+
+
+
               </div>
             </section>
 
@@ -997,7 +1117,7 @@ if (admin.role === "student") {
       <td colSpan="6">No queue records available.</td>
     </tr>
   )}
-</tbody>                </table>
+</tbody></table>
               </div>
             </section>
 
@@ -1615,21 +1735,182 @@ if (admin.role === "student") {
             </section>
           </div>
                ) : activePage === "Counters & Staff" ? (
-  <div className="page-content">
+   <div className="page-content counters-staff-page">
     <div className="page-header">
       <div>
         <h2>Counters & Staff Management</h2>
         <p>Manage campus counters and assign staff members.</p>
       </div>
 
-      <button onClick={() => setShowCounterForm(!showCounterForm)}>
-        {showCounterForm ? "Cancel" : "+ Add Counter"}
-      </button>
+      <div style={{ display: "flex", gap: "10px", flexWrap: "wrap" }}>
+  <button
+  type="button"
+  className="staff-action-button"
+  onClick={() => {
+    setShowStaffForm(!showStaffForm);
+    setStaffMessage("");
+  }}
+>
+
+    {showStaffForm ? "Cancel Staff Form" : "+ Add Staff"}
+  </button>
+
+  <button
+  type="button"
+  className="staff-action-button"
+  onClick={() => setShowCounterForm(!showCounterForm)}
+>
+
+    {showCounterForm ? "Cancel" : "+ Add Counter"}
+  </button>
+</div>
     </div>
 
     {counterMessage && (
       <p>{counterMessage}</p>
     )}
+
+{staffMessage && (
+  <p
+    style={{
+      padding: "12px",
+      margin: "12px 0",
+      borderRadius: "8px",
+      background: staffMessage.toLowerCase().includes("success")
+        ? "#E8F8EF"
+        : "#FDECEC",
+      color: staffMessage.toLowerCase().includes("success")
+        ? "#16834A"
+        : "#C0392B",
+    }}
+  >
+    {staffMessage}
+  </p>
+)}
+
+{showStaffForm && (
+  <form
+    onSubmit={handleCreateStaff}
+    style={{
+      display: "grid",
+      gap: "16px",
+      maxWidth: "600px",
+      padding: "24px",
+      marginBottom: "24px",
+      background: "#FFFFFF",
+      border: "1px solid #E2E8F0",
+      borderRadius: "12px",
+      boxShadow: "0 4px 15px rgba(0,0,0,0.05)",
+    }}
+  >
+    <div>
+      <h3 style={{ margin: "0 0 6px", color: "#1E293B" }}>
+        Create Staff Account
+      </h3>
+      <p style={{ margin: 0, color: "#64748B", fontSize: "13px" }}>
+        Enter the details to register a new staff member.
+      </p>
+    </div>
+
+    <label style={{ display: "grid", gap: "7px", color: "#334155" }}>
+      <span>Staff Name *</span>
+      <input
+        type="text"
+        value={staffName}
+        onChange={(event) => setStaffName(event.target.value)}
+        placeholder="Enter staff name"
+        required
+        style={{
+          width: "100%",
+          boxSizing: "border-box",
+          padding: "11px 12px",
+          border: "1px solid #CBD5E1",
+          borderRadius: "7px",
+          fontSize: "14px",
+        }}
+      />
+    </label>
+
+    <label style={{ display: "grid", gap: "7px", color: "#334155" }}>
+      <span>Staff Email *</span>
+      <input
+        type="email"
+        value={staffEmail}
+        onChange={(event) => setStaffEmail(event.target.value)}
+        placeholder="Enter staff email"
+        required
+        style={{
+          width: "100%",
+          boxSizing: "border-box",
+          padding: "11px 12px",
+          border: "1px solid #CBD5E1",
+          borderRadius: "7px",
+          fontSize: "14px",
+        }}
+      />
+    </label>
+
+    <label style={{ display: "grid", gap: "7px", color: "#334155" }}>
+      <span>Password *</span>
+      <input
+        type="password"
+        value={staffPassword}
+        onChange={(event) => setStaffPassword(event.target.value)}
+        placeholder="At least 6 characters"
+        minLength="6"
+        required
+        style={{
+          width: "100%",
+          boxSizing: "border-box",
+          padding: "11px 12px",
+          border: "1px solid #CBD5E1",
+          borderRadius: "7px",
+          fontSize: "14px",
+        }}
+      />
+    </label>
+
+    <label style={{ display: "grid", gap: "7px", color: "#334155" }}>
+      <span>Phone (optional)</span>
+      <input
+        type="tel"
+        value={staffPhone}
+        onChange={(event) => setStaffPhone(event.target.value)}
+        placeholder="Enter phone number"
+        style={{
+          width: "100%",
+          boxSizing: "border-box",
+          padding: "11px 12px",
+          border: "1px solid #CBD5E1",
+          borderRadius: "7px",
+          fontSize: "14px",
+        }}
+      />
+    </label>
+
+    <div style={{ display: "flex", gap: "12px", marginTop: "5px" }}>
+      <button
+        type="submit"
+        className="staff-submit-button"
+        disabled={staffSaving}
+      >
+        {staffSaving ? "Creating..." : "Create Staff"}
+      </button>
+
+      <button
+        type="button"
+        className="staff-cancel-button"
+        onClick={() => setShowStaffForm(false)}
+      >
+        Cancel
+      </button>
+    </div>
+  </form>
+)}
+
+
+
+
 
     {showCounterForm && (
       <form onSubmit={handleAddCounter}>
@@ -1688,6 +1969,7 @@ if (admin.role === "student") {
               <th>Counter Name</th>
               <th>Service</th>
               <th>Assigned Staff</th>
+              <th>Assign / Change Staff</th>
               <th>Status</th>
             </tr>
           </thead>
@@ -1698,7 +1980,46 @@ if (admin.role === "student") {
                 <td>{counter.name}</td>
                 <td>{counter.service?.name || "Not assigned"}</td>
                 <td>{counter.staff?.name || "Unassigned"}</td>
-                <td>{counter.status}</td>
+
+<td>
+  <div style={{ display: "flex", gap: "8px", alignItems: "center" }}>
+    <select
+    className="staff-assign-select"
+      value={selectedStaffByCounter[counter._id] || ""}
+      onChange={(e) =>
+        setSelectedStaffByCounter((previous) => ({
+          ...previous,
+          [counter._id]: e.target.value,
+
+        }))
+      }
+      disabled={assigningCounterId === counter._id}
+    >
+      <option value="">Select Staff</option>
+
+      {staffMembers.map((staff) => (
+        <option key={staff._id} value={staff._id}>
+          {staff.name} - {staff.email}
+        </option>
+      ))}
+    </select>
+
+    <button
+    className="staff-assign-button"
+      type="button"
+      onClick={() => handleAssignStaff(counter._id)}
+      disabled={
+        assigningCounterId === counter._id ||
+        !selectedStaffByCounter[counter._id]
+      }
+    >
+      {assigningCounterId === counter._id ? "Saving..." : "Assign"}
+    </button>
+  </div>
+</td>
+
+<td>{counter.status}</td>
+
               </tr>
             ))}
           </tbody>
@@ -2005,7 +2326,7 @@ if (admin.role === "student") {
     </button>
   </div>
 )}
-          
+
       </main>
     </div>
   );
