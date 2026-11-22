@@ -271,7 +271,11 @@ useEffect(() => {
   if (
     !admin ||
     admin.role !== "admin" ||
-    (activePage !== "Counters & Staff" && activePage !== "Dashboard")
+    (
+  activePage !== "Counters & Staff" &&
+  activePage !== "Dashboard" &&
+  activePage !== "Students"
+)
   ) {
     return;
   }
