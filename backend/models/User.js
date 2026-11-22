@@ -23,6 +23,15 @@ const userSchema = new mongoose.Schema(
       required: true,
       minlength: 6,
     },
+    resetPasswordToken: {
+  type: String,
+  default: undefined,
+},
+
+resetPasswordExpires: {
+  type: Date,
+  default: undefined,
+},
 
     phone: {
       type: String,

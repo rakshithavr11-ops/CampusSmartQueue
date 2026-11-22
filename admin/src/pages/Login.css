@@ -375,3 +375,41 @@
     padding: 25px 15px;
   }
 }
+
+/* ===== Forgot Password ===== */
+
+.forgot-password-link {
+  display: flex;
+  justify-content: flex-end;
+  margin: -9px 0 17px;
+}
+
+.forgot-password-link button {
+  border: none;
+  background: transparent;
+  color: #7357e8;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.forgot-password-link button:hover {
+  text-decoration: underline;
+}
+
+.forgot-password-form {
+  margin-top: 15px;
+  padding-top: 17px;
+  border-top: 1px solid #eeeaf8;
+}
+
+.forgot-success {
+  color: #16865b;
+  background: #edfff6;
+  border: 1px solid #c8f2dc;
+  border-radius: 9px;
+  padding: 11px;
+  font-size: 11px;
+  line-height: 1.5;
+  margin-bottom: 14px;
+}

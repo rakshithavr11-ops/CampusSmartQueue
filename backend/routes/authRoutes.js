@@ -1,15 +1,15 @@
 
 const express = require("express");
 const router = express.Router();
-
 const {
   register,
   login,
-    createStaff,
-    getAllStudents,
-    getAllStaff,
+  createStaff,
+  getAllStudents,
+  getAllStaff,
+  forgotPassword,
+  resetPassword,
 } = require("../controllers/authController");
-
 const {
   protect,
   authorize,
@@ -17,6 +17,8 @@ const {
 
 router.post("/register", register);
 router.post("/login", login);
+router.post("/forgot-password", forgotPassword);
+router.post("/reset-password/:token", resetPassword);
 
 // Admin-only staff creation
 router.post("/create-staff", protect, authorize("admin"), createStaff);

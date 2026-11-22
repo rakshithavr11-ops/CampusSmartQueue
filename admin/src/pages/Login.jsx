@@ -29,12 +29,20 @@ function Login({ onLogin }) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
+  // Forgot Password states
+  const [showForgotPassword, setShowForgotPassword] = useState(false);
+  const [forgotEmail, setForgotEmail] = useState("");
+  const [forgotLoading, setForgotLoading] = useState(false);
+  const [forgotMessage, setForgotMessage] = useState("");
+  const [forgotError, setForgotError] = useState("");
+
   const roles = [
     { id: "admin", label: "Admin", icon: ShieldCheck },
     { id: "staff", label: "Staff", icon: Users },
     { id: "student", label: "Student", icon: GraduationCap },
   ];
 
+  // LOGIN AND STUDENT REGISTRATION
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError("");
@@ -89,10 +97,38 @@ function Login({ onLogin }) {
     }
   };
 
+  // FORGOT PASSWORD
+  const handleForgotPassword = async (e) => {
+    e.preventDefault();
+
+    setForgotError("");
+    setForgotMessage("");
+    setForgotLoading(true);
+
+    try {
+      const response = await API.post("/auth/forgot-password", {
+        email: forgotEmail.trim(),
+      });
+
+      setForgotMessage(response.data.message);
+    } catch (err) {
+      setForgotError(
+        err.response?.data?.message ||
+          "Unable to send reset email. Please try again."
+      );
+    } finally {
+      setForgotLoading(false);
+    }
+  };
+
+  // CHANGE ACCOUNT ROLE
   const changeRole = (selectedRole) => {
     setRole(selectedRole);
     setIsRegister(false);
+    setShowForgotPassword(false);
     setError("");
+    setForgotError("");
+    setForgotMessage("");
   };
 
   return (
@@ -157,7 +193,7 @@ function Login({ onLogin }) {
           </div>
         </div>
 
-        {/* Login Form */}
+        {/* Login and Registration Form */}
         <form onSubmit={handleSubmit}>
 
           {isRegister && (
@@ -247,6 +283,23 @@ function Login({ onLogin }) {
             </div>
           )}
 
+          {/* Forgot Password Link */}
+          {!isRegister && (
+            <div className="forgot-password-link">
+              <button
+                type="button"
+                onClick={() => {
+                  setShowForgotPassword(!showForgotPassword);
+                  setForgotMessage("");
+                  setForgotError("");
+                  setForgotEmail(email);
+                }}
+              >
+                {showForgotPassword ? "Close" : "Forgot Password?"}
+              </button>
+            </div>
+          )}
+
           <button
             type="submit"
             className="login-submit"
@@ -260,6 +313,51 @@ function Login({ onLogin }) {
           </button>
         </form>
 
+        {/* Forgot Password Form */}
+        {showForgotPassword && !isRegister && (
+          <form
+            onSubmit={handleForgotPassword}
+            className="forgot-password-form"
+          >
+            <label htmlFor="forgot-email">
+              Registered Email Address
+            </label>
+
+            <div className="login-input">
+              <Mail size={19} />
+
+              <input
+                id="forgot-email"
+                type="email"
+                placeholder="Enter your registered email"
+                value={forgotEmail}
+                onChange={(e) => setForgotEmail(e.target.value)}
+                required
+              />
+            </div>
+
+            {forgotError && (
+              <div className="login-error">
+                {forgotError}
+              </div>
+            )}
+
+            {forgotMessage && (
+              <div className="forgot-success">
+                {forgotMessage}
+              </div>
+            )}
+
+            <button
+              type="submit"
+              className="login-submit"
+              disabled={forgotLoading}
+            >
+              {forgotLoading ? "Sending..." : "Send Reset Link"}
+            </button>
+          </form>
+        )}
+
         {/* Student Registration */}
         {role === "student" && (
           <div className="registration-option">
@@ -271,7 +369,10 @@ function Login({ onLogin }) {
               type="button"
               onClick={() => {
                 setIsRegister(!isRegister);
+                setShowForgotPassword(false);
                 setError("");
+                setForgotError("");
+                setForgotMessage("");
               }}
             >
               {isRegister ? "Sign In" : "Create Account"}
