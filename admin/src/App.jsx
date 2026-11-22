@@ -879,63 +879,75 @@ if (admin.role === "student") {
   </span>
 </div>
 
-                <div className="chart-container">
-                  <ResponsiveContainer width="100%" height="100%">
-                    <AreaChart data={chartData}>
-                      <defs>
-                        <linearGradient
-                          id="queueGradient"
-                          x1="0"
-                          y1="0"
-                          x2="0"
-                          y2="1"
-                        >
-                          <stop
-                            offset="0%"
-                            stopColor="#7357E8"
-                            stopOpacity={0.25}
-                          />
 
-                          <stop
-                            offset="95%"
-                            stopColor="#7357E8"
-                            stopOpacity={0}
-                          />
-                        </linearGradient>
-                      </defs>
+<div className="chart-container">
+  {analyticsLoading ? (
+    <div className="chart-empty-state">
+      Loading queue activity...
+    </div>
+  ) : analyticsError ? (
+    <div className="chart-empty-state">
+      Unable to load queue activity.
+    </div>
+  ) : !chartData.some(
+      (item) => Number(item.students) > 0
+    ) ? (
+    <div className="chart-empty-state">
+      <BarChart3 size={38} />
+      <h4>No queue activity yet</h4>
+      <p>
+        Completed student tokens will appear here throughout the day.
+      </p>
+    </div>
+  ) : (
+    <ResponsiveContainer width="100%" height="100%">
+      <AreaChart data={chartData}>
+        <defs>
+          <linearGradient
+            id="queueGradient"
+            x1="0"
+            y1="0"
+            x2="0"
+            y2="1"
+          >
+            <stop offset="0%" stopColor="#7357E8" stopOpacity={0.25} />
+            <stop offset="95%" stopColor="#7357E8" stopOpacity={0} />
+          </linearGradient>
+        </defs>
 
-                      <CartesianGrid
-                        strokeDasharray="4 4"
-                        vertical={false}
-                        stroke="#E9EAF0"
-                      />
+        <CartesianGrid
+          strokeDasharray="4 4"
+          vertical={false}
+          stroke="#E9EAF0"
+        />
 
-                      <XAxis
-                        dataKey="time"
-                        axisLine={false}
-                        tickLine={false}
-                        tick={{ fill: "#9295A5", fontSize: 12 }}
-                      />
+        <XAxis
+          dataKey="time"
+          axisLine={false}
+          tickLine={false}
+          tick={{ fill: "#9295A5", fontSize: 12 }}
+        />
 
-                      <YAxis
-                        axisLine={false}
-                        tickLine={false}
-                        tick={{ fill: "#9295A5", fontSize: 12 }}
-                      />
+        <YAxis
+          axisLine={false}
+          tickLine={false}
+          tick={{ fill: "#9295A5", fontSize: 12 }}
+        />
 
-                      <Tooltip />
+        <Tooltip />
 
-                      <Area
-                        type="monotone"
-                        dataKey="students"
-                        stroke="#7357E8"
-                        strokeWidth={3}
-                        fill="url(#queueGradient)"
-                      />
-                    </AreaChart>
-                  </ResponsiveContainer>
-                </div>
-              </div>
+        <Area
+          type="monotone"
+          dataKey="students"
+          stroke="#7357E8"
+          strokeWidth={3}
+          fill="url(#queueGradient)"
+        />
+      </AreaChart>
+    </ResponsiveContainer>
+  )}
+</div>
+</div>
 
               <div className="panel counter-panel">
                 <div className="panel-heading">
@@ -2024,10 +2036,76 @@ if (admin.role === "student") {
             ))}
           </tbody>
         </table>
+
       </div>
     )}
+
+    {/* STAFF RECORDS */}
+    <div style={{ marginTop: "30px" }}>
+      <div className="page-header">
+        <div>
+          <h2>Staff Records</h2>
+          <p>View all registered campus staff members.</p>
+        </div>
+        <span>
+          Total Staff: {staffMembers.length}
+        </span>
+      </div>
+
+      {staffMembers.length === 0 ? (
+        <p>No staff records found.</p>
+      ) : (
+        <div className="table-container">
+          <table>
+            <thead>
+              <tr>
+                <th>Staff Name</th>
+                <th>Email Address</th>
+                <th>Phone Number</th>
+                <th>Assigned Counter</th>
+                <th>Account Status</th>
+                <th>Registration Date</th>
+              </tr>
+            </thead>
+
+            <tbody>
+              {staffMembers.map((staff) => {
+                const assignedCounters = counters
+                  .filter(
+                    (counter) =>
+                      counter.staff?._id === staff._id
+                  )
+                  .map((counter) => counter.name);
+
+                return (
+                  <tr key={staff._id}>
+                    <td>{staff.name}</td>
+                    <td>{staff.email}</td>
+                    <td>{staff.phone || "Not provided"}</td>
+                    <td>
+                      {assignedCounters.length > 0
+                        ? assignedCounters.join(", ")
+                        : "Not assigned"}
+                    </td>
+                    <td>
+                      {staff.isActive ? "Active" : "Inactive"}
+                    </td>
+                    <td>
+                      {staff.createdAt
+                        ? new Date(staff.createdAt).toLocaleDateString()
+                        : "Not available"}
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
+      )}
+    </div>
   </div>
 ) : activePage === "Analytics" ? (
+
   <div className="dashboard-content">
     <section className="welcome-section">
       <div>
