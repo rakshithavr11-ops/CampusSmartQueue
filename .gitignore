@@ -1,0 +1,36 @@
+# Environment variables and secrets
+.env
+.env.*
+!.env.example
+**/.env
+**/.env.*
+**/!.env.example
+
+# Dependencies
+node_modules/
+
+# Build outputs
+dist/
+build/
+.dart_tool/
+
+# Flutter generated files
+.flutter-plugins
+.flutter-plugins-dependencies
+
+# Android local configuration and signing keys
+mobile/android/local.properties
+*.jks
+*.keystore
+key.properties
+
+# Logs and temporary files
+*.log
+npm-debug.log*
+coverage/
+
+# IDE and operating system files
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
